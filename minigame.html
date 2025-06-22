@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hpbfakm</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+  
+    }
+
+    #player, .wall {
+      position: absolute;
+      width: 100px;
+      height: 100px;
+    }
+
+    #player {
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      cursor: pointer;
+    }
+
+    h1 {
+      text-align: center;
+      font-family: sans-serif;
+      animation: zoom 1s infinite alternate;
+      margin-top: 10px;
+    }
+
+    @keyframes zoom {
+      from {
+        transform: scale(1);
+      }
+      to {
+        transform: scale(1.2);
+      }
+    }
+  </style>
+</head>
+<body>
+
+<img src="player.png" alt="Игрок" id="player">
+<h1 id="score">Count: 0</h1>
+
+<script>
+  const player = document.getElementById("player");
+  const scoreDisplay = document.getElementById("score");
+  let walls = [];
+  const wallCount = 5;
+
+  let angle = 0;
+  let velocityY = 0;
+  let gravity = 0.4;
+  let jumpPower = -10;
+  let playerTop = 0;
+  let playerLeft = window.innerWidth / 2 - 50;
+  let score = 0;
+
+  function spawnWalls() {
+    walls.forEach(w => w.remove());
+    walls = [];
+
+    for (let i = 0; i < wallCount; i++) {
+      const wall = document.createElement("img");
+      wall.src = "wall.png";
+      wall.className = "wall";
+
+      const randomX = Math.random() * (window.innerWidth - 100);
+      const randomY = Math.random() * (window.innerHeight - 200);
+
+      wall.style.left = `${randomX}px`;
+      wall.style.top = `${randomY}px`;
+
+      document.body.appendChild(wall);
+      walls.push(wall);
+    }
+  }
+
+  function isColliding(a, b) {
+    const r1 = a.getBoundingClientRect();
+    const r2 = b.getBoundingClientRect();
+    return !(
+      r1.bottom < r2.top ||
+      r1.top > r2.bottom ||
+      r1.right < r2.left ||
+      r1.left > r2.right
+    );
+  }
+
+  function updateScore() {
+    scoreDisplay.textContent = `Count: ${score}`;
+  }
+
+  function resetPlayerPosition() {
+    playerTop = 0;
+    velocityY = 0;
+    playerLeft = window.innerWidth / 2 - 50;
+    player.style.left = `${playerLeft}px`;
+    player.style.top = `${playerTop}px`;
+  }
+
+  function fullReset() {
+    score = 0;
+    updateScore();
+    resetPlayerPosition();
+    spawnWalls();
+  }
+
+  // Прыжок при клике
+  document.addEventListener("click", () => {
+    velocityY = jumpPower;
+    playerLeft += 30;
+    if (playerLeft > window.innerWidth - 100) {
+      playerLeft = window.innerWidth - 100;
+    }
+  });
+
+  function animate() {
+    angle += 4;
+    player.style.transform = `translateX(-50%) rotate(${angle}deg)`;
+
+    velocityY += gravity;
+    playerTop += velocityY;
+    player.style.top = `${playerTop}px`;
+    player.style.left = `${playerLeft}px`;
+
+    for (let wall of walls) {
+      if (isColliding(player, wall)) {
+        fullReset(); // столкновение — сброс всего
+        return;
+      }
+    }
+
+    // Если игрок достиг нижней границы — +счёт и рестарт уровня
+    if (playerTop > window.innerHeight - 100) {
+      score++;
+      updateScore();
+      resetPlayerPosition();
+      spawnWalls();
+      return;
+    }
+
+    requestAnimationFrame(animate);
+  }
+
+  fullReset();
+  animate();
+</script>
+
+</body>
+</html>
